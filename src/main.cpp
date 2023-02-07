@@ -13,7 +13,7 @@
 WebServer webServer(80);
 
 // Moisture Sensor Pin
-#define Moisture_PIN 32
+#define Moisture_PIN 25
 
 // Motor Driver
 #define MOTOR_PIN1 26 // GPIO for control input 1
@@ -21,16 +21,6 @@ WebServer webServer(80);
 
 int moisture = 0;
 int moistureThreshold = 0;
-
-// ***********************************************************
-void waterGarden()
-{
-  digitalWrite(MOTOR_PIN1, HIGH);
-  digitalWrite(MOTOR_PIN2, LOW);
-  delay(3000);
-  digitalWrite(MOTOR_PIN1, LOW);
-  digitalWrite(MOTOR_PIN2, LOW);
-}
 
 // *********************************************************************
 bool loadFromLittleFS(String path)
@@ -117,6 +107,16 @@ void handleWebRequests()
     webServer.send(404, "text/plain", message);
     Serial.println(message);
   }
+}
+
+// ***********************************************************
+void waterGarden()
+{
+  digitalWrite(MOTOR_PIN1, HIGH);
+  digitalWrite(MOTOR_PIN2, LOW);
+  delay(3000);
+  digitalWrite(MOTOR_PIN1, LOW);
+  digitalWrite(MOTOR_PIN2, LOW);
 }
 
 // ***********************************************************
