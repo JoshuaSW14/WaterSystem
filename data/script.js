@@ -16,7 +16,9 @@ function fetchData() {
       document.getElementById("moisture").style.width =
         convertRange(espData.temperature, [10, 30], [0, 100]) + "%";
       document.getElementById("moisture").innerHTML =
-        espData.temperature + "%";
+        espData.moisture + "%";
+
+      console.log(espData);
 
       window.setTimeout(fetchData, 5000);
     }

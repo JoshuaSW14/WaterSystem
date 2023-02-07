@@ -13,14 +13,11 @@
 WebServer webServer(80);
 
 // Moisture Sensor Pin
-#define Moisture_PIN 33
+#define Moisture_PIN 32
 
 // Motor Driver
-#define MOTOR_PIN1 39 // GPIO for control input 1
-#define MOTOR_PIN2 37 // GPIO for control input 2
-
-// Button Pin
-#define Button_Pin 7
+#define MOTOR_PIN1 26 // GPIO for control input 1
+#define MOTOR_PIN2 27 // GPIO for control input 2
 
 int moisture = 0;
 int moistureThreshold = 0;
@@ -36,8 +33,6 @@ void waterGarden()
 }
 
 // *********************************************************************
-// this function examines the URL from the client and based on the extension
-// determines the type of response to send.
 bool loadFromLittleFS(String path)
 {
   bool bStatus;
@@ -132,10 +127,17 @@ void checkInput()
     waterGarden();
   }
 
-  float slope = 2.48;      // slope from linear fit
-  float intercept = -0.72; // intercept from linear fit
-  float voltage = (float(analogRead(Moisture_PIN)) / 1023.0) * 3.3;
-  moisture = ((1.0 / voltage) * slope) + intercept;
+  // float slope = 2.48;      // slope from linear fit
+  // float intercept = -0.72; // intercept from linear fit
+  // float voltage = (float(analogRead(Moisture_PIN)) / 1023.0) * 3.3;
+  // moisture = ((1.0 / voltage) * slope) + intercept;
+
+  // int sensor_analog = analogRead();
+  // moisture = ( 100 - ( (sensor_analog/1023.00) * 100 ) );
+
+  int aVal;
+  aVal = analogRead(Moisture_PIN); //Reads the value from the variable resistor
+  moisture = map(aVal, 0, 1023, 0, 100); //Maps the variable resistor value to the LED value
 
   String json;
   json.reserve(88);
