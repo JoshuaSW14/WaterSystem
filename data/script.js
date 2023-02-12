@@ -14,8 +14,20 @@ function fetchData() {
       var x = espData.time;
 
       document.getElementById("moisture").style.width =
+        convertRange(espData.moisture, [10, 30], [0, 100]) + "%";
+      document.getElementById("moisture").innerHTML = espData.moisture + "%";
+
+      document.getElementById("temperature").style.width =
         convertRange(espData.temperature, [10, 30], [0, 100]) + "%";
-      document.getElementById("moisture").innerHTML = espData.temperature + "%";
+      document.getElementById("temperature").innerHTML = espData.temperature + "°C";
+
+      document.getElementById("humidity").style.width =
+        convertRange(espData.humidity, [10, 30], [0, 100]) + "%";
+      document.getElementById("humidity").innerHTML = espData.humidity + "%";
+
+      document.getElementById("sunlight").style.width =
+        convertRange(espData.sunlight, [10, 30], [0, 100]) + "%";
+      document.getElementById("sunlight").innerHTML = espData.sunlight + "%";
 
       window.setTimeout(fetchData, 5000);
     }

@@ -9,15 +9,34 @@
 #include <WebServer.h>
 #include <LittleFS.h>
 #include <ESPAsyncWebServer.h>
+#include "DHT.h"
 
 WebServer webServer(80);
 
 // Moisture Sensor Pin
 #define Moisture_PIN 25
 
+// DHT Sensor
+#define DHTPIN 33
+#define DHTTYPE DHT11
+
+// LDR Pin (analog)
+#define LDR_PIN 32
+
 // Motor Driver
 #define MOTOR_PIN1 26 // GPIO for control input 1
 #define MOTOR_PIN2 27 // GPIO for control input 2
+
+// Ambient Light Sensor
+int ldrValue;
+const int ldrResolution = 12; // Could be 9-12
+float sunlight;
+
+// DHT Sensor
+DHT dht(DHTPIN, DHTTYPE);
+float humidity;
+float temperature;
+
 
 int moisture = 0;
 int moistureThreshold = 0;
@@ -122,22 +141,26 @@ void waterGarden()
 // ***********************************************************
 void checkInput()
 {
+  humidity = dht.readHumidity();
+  temperature = dht.readTemperature();
+
+  Serial.println("temperature: " + String(temperature));
+  Serial.println("humidity: " + String(humidity));
+
+  analogReadResolution(ldrResolution);
+  ldrValue = analogRead(LDR_PIN);
+  Serial.println("ldrValue: " + String(ldrValue));
+  sunlight = map(ldrValue, 0, 1023, 0, 100);
+
   if (moistureThreshold > moisture)
   {
     waterGarden();
   }
 
-  // float slope = 2.48;      // slope from linear fit
-  // float intercept = -0.72; // intercept from linear fit
-  // float voltage = (float(analogRead(Moisture_PIN)) / 1023.0) * 3.3;
-  // moisture = ((1.0 / voltage) * slope) + intercept;
-
-  // int sensor_analog = analogRead();
-  // moisture = ( 100 - ( (sensor_analog/1023.00) * 100 ) );
-
   int aVal;
-  aVal = analogRead(Moisture_PIN); //Reads the value from the variable resistor
-  moisture = map(aVal, 0, 1023, 0, 100); //Maps the variable resistor value to the LED value
+  aVal = analogRead(Moisture_PIN);
+  Serial.println("moisture: " + String(aVal));
+  moisture = map(aVal, 0, 1023, 0, 100);
 
   String json;
   json.reserve(88);
@@ -145,6 +168,12 @@ void checkInput()
   json += millis();
   json += ", \"moisture\":";
   json += moisture;
+  json += ", \"temperature\":";
+  json += temperature;
+  json += ", \"humidity\":";
+  json += humidity;
+  json += ", \"sunlight\":";
+  json += ldrValue;
   json += "}";
   Serial.println(json);
   webServer.send(200, "text/json", json); // Sends the json string to the web server
@@ -221,6 +250,8 @@ void setup()
 
   pinMode(MOTOR_PIN1, OUTPUT);
   pinMode(MOTOR_PIN2, OUTPUT);
+
+  dht.begin();
 
   wifiSetup();
   otaSetup();
