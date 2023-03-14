@@ -2,6 +2,22 @@ function convertRange(value, r1, r2) {
   return ((value - r1[0]) * (r2[1] - r2[0])) / (r1[1] - r1[0]) + r2[0];
 }
 
+function waterPlant(){
+  var xmlHttp = new XMLHttpRequest();
+
+  xmlHttp.open("POST", "/plant", true);
+  xmlHttp.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+  xmlHttp.onreadystatechange = () => {
+    if (xmlHttp.readyState === XMLHttpRequest.DONE && XPathResult.status === 200){
+      console.log("Plant = Water sending to esp32");
+    }
+  }
+
+  xmlHttp.send("plant=water");
+  console.log("sent!");
+}
+
 function fetchData() {
   var xmlHttp = new XMLHttpRequest();
   xmlHttp.onload = function () {

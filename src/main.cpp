@@ -11,14 +11,15 @@
 #include <ESPAsyncWebServer.h>
 #include "DHT.h"
 
+AsyncWebServer server(80);
 WebServer webServer(80);
 
 // Moisture Sensor Pin
-#define Moisture_PIN 25
+#define Moisture_PIN 34
 
 // DHT Sensor
 #define DHTPIN 33
-#define DHTTYPE DHT11
+#define DHTTYPE DHT22
 
 // LDR Pin (analog)
 #define LDR_PIN 32
@@ -37,9 +38,8 @@ DHT dht(DHTPIN, DHTTYPE);
 float humidity;
 float temperature;
 
-
 int moisture = 0;
-int moistureThreshold = 0;
+int moistureThreshold = 10;
 
 // *********************************************************************
 bool loadFromLittleFS(String path)
@@ -131,6 +131,7 @@ void handleWebRequests()
 // ***********************************************************
 void waterGarden()
 {
+  Serial.println("Watering");
   digitalWrite(MOTOR_PIN1, HIGH);
   digitalWrite(MOTOR_PIN2, LOW);
   delay(3000);
@@ -144,23 +145,32 @@ void checkInput()
   humidity = dht.readHumidity();
   temperature = dht.readTemperature();
 
-  Serial.println("temperature: " + String(temperature));
-  Serial.println("humidity: " + String(humidity));
+  if (isnan(humidity) || isnan(temperature))
+  {
+    Serial.println(F("Failed to read from DHT sensor!"));
+    temperature = 0;
+    humidity = 0;
+  }
+  else
+  {
+    Serial.println("temperature: " + String(temperature));
+    Serial.println("humidity: " + String(humidity));
+  }
 
   analogReadResolution(ldrResolution);
   ldrValue = analogRead(LDR_PIN);
-  Serial.println("ldrValue: " + String(ldrValue));
-  sunlight = map(ldrValue, 0, 1023, 0, 100);
-
-  if (moistureThreshold > moisture)
-  {
-    waterGarden();
-  }
+  sunlight = map(ldrValue, 0, 4096, 0, 100);
+  Serial.println("ldrValue: " + String(sunlight));
 
   int aVal;
   aVal = analogRead(Moisture_PIN);
   Serial.println("moisture: " + String(aVal));
   moisture = map(aVal, 0, 1023, 0, 100);
+
+  if (moistureThreshold > moisture)
+  {
+    waterGarden();
+  }
 
   String json;
   json.reserve(88);
@@ -173,7 +183,7 @@ void checkInput()
   json += ", \"humidity\":";
   json += humidity;
   json += ", \"sunlight\":";
-  json += ldrValue;
+  json += sunlight;
   json += "}";
   Serial.println(json);
   webServer.send(200, "text/json", json); // Sends the json string to the web server
@@ -199,6 +209,22 @@ void wifiSetup()
 
   // handler for time and temperature
   webServer.on("/checkInput", HTTP_GET, checkInput);
+  server.on("/plant", HTTP_POST, [](AsyncWebServerRequest *request)
+               {
+                 int params = request->params();
+                 // loop over the params.
+                 for (int i = 0; i < params; i++)
+                 {
+                   // get a reference to the param object at index.
+                   AsyncWebParameter *p = request->getParam(i);
+                   // print param values.
+                   Serial.printf(
+                       "name: %s\nvalue:%s\n",
+                       p->name().c_str(), p->value().c_str());
+                 }
+                 // always respond to the client with something!
+                 request->send(200, "text/plain", "Got it!");
+               });
 
   // send all other web requests here by default.
   // The filesystem will be searched for the requested resource
@@ -206,6 +232,8 @@ void wifiSetup()
 
   // start web server and print it's address.
   webServer.begin();
+  server.begin();
+
   Serial.printf("\nWeb server started, open %s in a web browser\n", WiFi.localIP().toString().c_str());
 }
 
